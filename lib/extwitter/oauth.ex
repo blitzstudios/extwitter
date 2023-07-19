@@ -31,8 +31,9 @@ defmodule ExTwitter.OAuth do
   def oauth_get(url, params, consumer_key, consumer_secret, access_token, access_token_secret, options) do
     signed_params = get_signed_params(
       "get", url, params, consumer_key, consumer_secret, access_token, access_token_secret)
-    encoded_params = URI.encode_query(signed_params)
-    request = {to_charlist(url <> "?" <> encoded_params), []}
+    {header, req_params} = OAuther.header(signed_params)
+    header = header |> Tuple.to_list() |> Enum.map(&to_charlist/1) |> List.to_tuple()
+    request = {to_charlist(url <> "?" <> URI.encode_query(req_params)), [header]}
     send_httpc_request(:get, request, options)
   end
 
