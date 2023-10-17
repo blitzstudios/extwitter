@@ -33,7 +33,7 @@ defmodule ExTwitter.Mixfile do
   def application do
     [
       mod: {ExTwitter, []},
-      applications: [:inets, :ssl, :crypto, :logger, :oauther]
+      applications: [:inets, :ssl, :crypto, :logger, :oauther, :hackney]
     ]
   end
 
@@ -41,6 +41,7 @@ defmodule ExTwitter.Mixfile do
     [
       {:oauther, "~> 1.3"},
       {:jason, "~> 1.1"},
+      {:hackney, "~> 1.18.1"},
       {:exvcr, "~> 0.14", only: :test},
       {:excoveralls, "~> 0.14", only: :test},
       {:meck, "~> 0.8.13", only: [:dev, :test]},

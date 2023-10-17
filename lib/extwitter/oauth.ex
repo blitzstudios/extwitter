@@ -32,21 +32,37 @@ defmodule ExTwitter.OAuth do
     signed_params = get_signed_params(
       "get", url, params, consumer_key, consumer_secret, access_token, access_token_secret)
     {header, req_params} = OAuther.header(signed_params)
+
     header = header |> Tuple.to_list() |> Enum.map(&to_charlist/1) |> List.to_tuple()
-    request = {to_charlist(url <> "?" <> URI.encode_query(req_params)), [header]}
-    send_httpc_request(:get, request, options)
+    #request = {to_charlist(url <> "?" <> URI.encode_query(req_params)), [header]}
+    #send_httpc_request(:get, request, options)
+    full_url = url <> "?" <> URI.encode_query(req_params)
+    send_hackney_request(:get, full_url, [header], [], options)
   end
 
   def oauth_post(url, params, consumer_key, consumer_secret, access_token, access_token_secret, options) do
     signed_params = get_signed_params(
       "post", url, params, consumer_key, consumer_secret, access_token, access_token_secret)
     encoded_params = URI.encode_query(signed_params)
-    request = {to_charlist(url), [], 'application/x-www-form-urlencoded', encoded_params}
-    send_httpc_request(:post, request, options)
+    # request = {to_charlist(url), [], 'application/x-www-form-urlencoded', encoded_params}
+
+    # send_httpc_request(:post, request, options)
+    full_url = url <> "?" <> URI.encode_query(params)
+    headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
+    send_hackney_request(:post, full_url, headers, encoded_params, options)
   end
 
   def send_httpc_request(method, request, options) do
     :httpc.request(method, request, [{:autoredirect, false}] ++ proxy_option(), options)
+  end
+
+  defp send_hackney_request(method, url, headers, payload, options) do
+    options = [{:autoredirect, false}, {:with_body, true}] ++ proxy_option() ++ options
+    :hackney.request(method, url, headers, payload, options)
+    |> case do
+      {:ok, status_code, headers, body} -> {:ok, {status_code, headers, body}}
+      other -> other
+    end
   end
 
   defp get_signed_params(method, url, params, consumer_key, consumer_secret, access_token, access_token_secret) do
